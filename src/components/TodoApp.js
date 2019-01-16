@@ -73,6 +73,29 @@ const todoApp = combineReducers({
     visibilityFilter
 });
 
+let nextTodoId = 0;
+const addToDo = (text) => {
+    return {
+        type: 'ADD_TODO',
+        id: nextTodoId++,
+        text
+    };
+}
+
+const setVisiblityFilter = (filter) => {
+    return {
+        type: 'SET_VISIBILITY_FILTER',
+        filter
+    };
+};
+
+const toggleTodo = (id) => {
+    return {
+        type: 'TOGGLE_TODO',
+        id
+    };
+}
+
 const Link = ({
     active,
     children,
@@ -98,7 +121,7 @@ const mapStateToLinkProps = (
 ) => {
     return {
         active:
-            props.filter === state.visibilityFilter
+            ownProps.filter === state.visibilityFilter
     };
 };
 
@@ -108,10 +131,9 @@ const mapDispatchToLinkProps = (
 ) => {
     return {
         onClick: () => {
-            dispatch({
-                type: 'SET_VISIBILITY_FILTER',
-                filter: ownProps.filter
-            })
+            dispatch(
+                setVisiblityFilter(ownProps.filter)
+            )
         }
     }
 }
@@ -119,7 +141,7 @@ const mapDispatchToLinkProps = (
 const FilterLink = connect(
     mapStateToLinkProps,
     mapDispatchToLinkProps
-)
+)(Link)
 
 const Footer = () => {
     return (
@@ -175,6 +197,8 @@ const TodoList = ({
         </ul>
     );
 
+
+
 let AddToDo = ({ dispatch }) => {
     let input;
 
@@ -184,11 +208,7 @@ let AddToDo = ({ dispatch }) => {
                 input = node;
             }} />
             <button onClick={() => {
-                dispatch({
-                    type: 'ADD_TODO',
-                    id: nextTodoId++,
-                    text: input.value
-                })
+                dispatch(addToDo(input.value));
                 this.input.value = '';
             }}>
                 Add Todo
@@ -203,7 +223,7 @@ const getVisibleTodos = (
     filter
 ) => {
     switch (filter) {
-        case 'SHOW ALL':
+        case 'SHOW_ALL':
             return todos;
         case 'SHOW_COMPLETED':
             return todos.filter(
@@ -212,7 +232,9 @@ const getVisibleTodos = (
         case 'SHOW_ACTIVE':
             return todos.filter(
                 t => !t.completed
-            );
+            )
+        default:
+            throw new Error('Unknown filter: ' + filter)
     }
 }
 
@@ -227,36 +249,28 @@ const mapStatetoTodoProps = (state) => {
 const mapDispatchToTodoProps = (dispatch) => {
     return {
         OnTodoClick: (id) => {
-            dispatch({
-                type: 'TOGGLE_TODO',
-                id
-            })
+            dispatch(toggleTodo(id))
         }
     };
 }
-const VisibilityTodoList = connect(
+const VisibileTodoList = connect(
     mapStatetoTodoProps,
     mapDispatchToTodoProps
 )(TodoList);
 
 
 
-let nextTodoId = 0;
+
 const TodoApp = () => (
     <div>
         <AddToDo />
-        < VisibilityTodoList />
+        < VisibileTodoList />
         <Footer />
     </div>
 )
 export default TodoApp
 
-ReactDOM.render(
-    <Provider store={createStore(todoApp)} >
-        <TodoApp />
-    </Provider>,
-    document.getElementById('root')
-)
+
 
 // const todoApp = (state = {}, action) => {
 //     return {
